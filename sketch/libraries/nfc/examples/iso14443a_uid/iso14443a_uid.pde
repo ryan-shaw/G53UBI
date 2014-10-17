@@ -1,5 +1,3 @@
-#include <SCoop.h>
-
 /**************************************************************************/
 /*! 
     @file     iso14443a_uid.pde
@@ -33,31 +31,9 @@
 #define RESET (3)  // Not connected by default on the NFC Shield
 
 Adafruit_NFCShield_I2C nfc(IRQ, RESET);
-int previous = LOW;
-int reading;
-
-long time = 0;
-long debounce = 200;
-
-defineTask(task1)
-void task1::setup() {
- Serial.begin(115200);
- pinMode(7, INPUT);
-}
-
-void task1::loop() {
- // We can do stuff here :D
- reading = digitalRead(7);
- if(reading != previous && millis() - time > debounce && reading == HIGH){
-   Serial.println("Post");
-   time = millis();
- }
- previous = reading;
- sleep(10); 
-}
 
 void setup(void) {
-  mySCoop.start();
+  Serial.begin(115200);
   Serial.println("Hello!");
 
   nfc.begin();
@@ -84,8 +60,6 @@ void setup(void) {
   Serial.println("Waiting for an ISO14443A card");
 }
 
-
-
 void loop(void) {
   boolean success;
   uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
@@ -95,6 +69,7 @@ void loop(void) {
   // 'uid' will be populated with the UID, and uidLength will indicate
   // if the uid is 4 bytes (Mifare Classic) or 7 bytes (Mifare Ultralight)
   success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength);
+  
   if (success) {
     Serial.println("Found a card!");
     Serial.print("UID Length: ");Serial.print(uidLength, DEC);Serial.println(" bytes");
@@ -104,7 +79,6 @@ void loop(void) {
       Serial.print(" 0x");Serial.print(uid[i], HEX); 
     }
     Serial.println("");
-    Serial.flush();
     // Wait 1 second before continuing
     delay(1000);
   }
