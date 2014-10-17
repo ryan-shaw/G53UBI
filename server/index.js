@@ -1,7 +1,7 @@
 var serialport = require('serialport');
 var SerialPort = serialport.SerialPort;
 
-var sp = new SerialPort('/dev/ttyACM1', {
+var sp = new SerialPort('/dev/ttyACM0', {
 	parser: serialport.parsers.readline('\n'),
 	baudrate: 115200
 });
