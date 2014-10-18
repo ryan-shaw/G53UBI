@@ -9,6 +9,7 @@
   "author": "Ryan Shaw",
   "license": "ISC",
   "dependencies": {
-    "serialport": "~1.4.6"
+    "serialport": "~1.4.6",
+    "prompt": "~0.2.14"
   }
 }
