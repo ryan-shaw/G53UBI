@@ -11,29 +11,26 @@ var UserSchema = mongoose.Schema({
 });
 var UserModel = mongoose.model('Users', UserSchema);
 
-var sp = new SerialPort('COM5', {
-	parser: serialport.parsers.readline('\n'),
-	baudrate: 115200
-});
+var sp;
+var path;
+serialport.list(function(err, ports){
+	ports.forEach(function(port){
+		console.log(port.comName);
+		console.log(port.pnpId);
+		console.log(port.manufacturer);
+		if(port.manufacturer.indexOf('Arduino') != -1){
+			path = port.comName;
+		}
+	});
+	sp = new SerialPort(path, {
+		parser: serialport.parsers.readline('\n'),
+		baudrate: 115200
+	});
 
-var sys = require('sys');
-var addingUser = false;
-var user;
-
-var stdin = process.openStdin();
-stdin.addListener('data', function(data){
-	var command = data.toString();
-	if(command.indexOf('adduser') === 0){
-		user = command.substring(command.indexOf(' ') + 1).trim();
-		console.log('Scan card now.');
-		addingUser = true;
-	}
-});
-
-sp.on('open', function(){
-	console.log('Serial port to Arduino opened');
-	sp.on('data', function(data){
-		
+	sp.on('open', function(){
+		console.log('Serial port to Arduino opened');
+		sp.on('data', function(data){
+			
 			if(data.indexOf('UID Value: ') === 0){
 				var id = data.substring(12);
 				console.log(id);
@@ -78,7 +75,23 @@ sp.on('open', function(){
 					});
 				}
 			}
-		
-		console.log('data received: ', data.toString());
+			
+			console.log('data received: ', data.toString());
+		});
 	});
 });
+
+var sys = require('sys');
+var addingUser = false;
+var user;
+
+var stdin = process.openStdin();
+stdin.addListener('data', function(data){
+	var command = data.toString();
+	if(command.indexOf('adduser') === 0){
+		user = command.substring(command.indexOf(' ') + 1).trim();
+		console.log('Scan card now.');
+		addingUser = true;
+	}
+});
+
