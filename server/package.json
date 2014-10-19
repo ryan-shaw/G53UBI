@@ -9,6 +9,7 @@
   "author": "Ryan Shaw",
   "license": "ISC",
   "dependencies": {
+    "mongoose": "^3.8.17",
     "serialport": "~1.4.6"
   }
 }

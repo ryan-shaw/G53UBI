@@ -1,5 +1,15 @@
 var serialport = require('serialport');
 var SerialPort = serialport.SerialPort;
+var mongoose = require('mongoose');
+
+mongoose.connect('whoisin:94jefgadkgf29@178.62.14.38:27017/whoisin');
+
+var UserSchema = mongoose.Schema({
+	name: String,
+	nfcId: Number,
+	status: Number
+});
+var UserModel = mongoose.model('Users', UserSchema);
 
 var sp = new SerialPort('COM5', {
 	parser: serialport.parsers.readline('\n'),
@@ -8,12 +18,13 @@ var sp = new SerialPort('COM5', {
 
 var sys = require('sys');
 var addingUser = false;
+var user;
 
 var stdin = process.openStdin();
 stdin.addListener('data', function(data){
 	var command = data.toString();
 	if(command.indexOf('adduser') === 0){
-		var user = command.substring(command.indexOf(' ') + 1);
+		user = command.substring(command.indexOf(' ') + 1).trim();
 		console.log('Scan card now.');
 		addingUser = true;
 	}
@@ -22,7 +33,7 @@ stdin.addListener('data', function(data){
 sp.on('open', function(){
 	console.log('Serial port to Arduino opened');
 	sp.on('data', function(data){
-		if(addingUser){
+		
 			if(data.indexOf('UID Value: ') === 0){
 				var id = data.substring(12);
 				console.log(id);
@@ -30,15 +41,44 @@ sp.on('open', function(){
 				var buf = new Buffer(bytes.length);
 				for(var i = 0; i < bytes.length; i++){
 					var byte = bytes[i].substring(2);
-					console.log(byte);
 					buf.write(byte, i);
 				}
-				console.log(buf.readInt32LE(0));
-				addingUser = false;
+				var id = buf.readInt32LE(0);
+				if(addingUser){
+					UserModel.create({
+						name: user.trim(),
+						nfcId: id,
+						status: 1
+					}, function(err){
+						if(err){
+							console.log('Error adding user...', err);
+						}else{
+							console.log('Added ', user);
+						}
+					});
+					addingUser = false;
+				}else{
+					UserModel.findOne({nfcId: id}, function(err, user){
+						if(!user){
+							console.log('Could not find user');
+						}else{
+							if(user.status === 1){
+								user.status = 0;
+							}else{
+								user.status = 1;
+							}
+							user.save(function(err){
+								if(err){
+									console.log('Could not update user', err);
+								}else{
+									console.log('User \''+user.name+'\' status is now: ', user.status);
+								}
+							});
+						}
+					});
+				}
 			}
-		}else{
-
-		}
+		
 		console.log('data received: ', data.toString());
 	});
 });
