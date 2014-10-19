@@ -46,7 +46,7 @@ sp.on('open', function(){
 				var id = buf.readInt32LE(0);
 				if(addingUser){
 					UserModel.create({
-						name: user.trim(),
+						name: user,
 						nfcId: id,
 						status: 1
 					}, function(err){
