@@ -31,7 +31,8 @@
 
 #define IRQ   (2)
 #define RESET (3)  // Not connected by default on the NFC Shield
-
+#define LED_RED (5)
+#define LED_GREEN (6)
 Adafruit_NFCShield_I2C nfc(IRQ, RESET);
 int previous = LOW;
 int reading;
@@ -39,14 +40,43 @@ int reading;
 long time = 0;
 long debounce = 200;
 
+
+
 defineTask(task1)
 void task1::setup() {
  Serial.begin(115200);
  pinMode(7, INPUT);
+ pinMode(LED_GREEN, OUTPUT);
+ pinMode(LED_RED, OUTPUT);
+ digitalWrite(LED_GREEN, LOW);
+ digitalWrite(LED_RED, HIGH);
 }
 
 void task1::loop() {
  // We can do stuff here :D
+ // send data only when you receive data:
+char inData[20]; 
+char inChar=-1;
+byte index = 0; 
+  while  (Serial.available() > 0) {
+    if(index < 19) // One less than the size of the array
+     {
+       inChar = Serial.read(); // Read a character
+       inData[index] = inChar; // Store it
+       index++; // Increment where to write next
+       inData[index] = '\0'; // Null terminate the string
+     }
+     if(strcmp(inData, "busy") == 0){
+      digitalWrite(LED_RED, HIGH);
+      digitalWrite(LED_GREEN, LOW); 
+     }else if(strcmp(inData, "ready") == 0){
+      digitalWrite(LED_RED, LOW);
+      digitalWrite(LED_GREEN, HIGH); 
+     }
+ }
+ 
+ 
+ 
  reading = digitalRead(7);
  if(reading != previous && millis() - time > debounce && reading == HIGH){
    Serial.println("Post");
