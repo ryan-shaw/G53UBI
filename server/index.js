@@ -24,9 +24,10 @@ serialport.list(function(err, ports){
 
 	sp.on('open', function(){
 		console.log('Serial port to Arduino opened');
-		sp.write('ready');
+		
 		sp.on('data', function(data){
-			
+			if(data.indexOf('Hello!') !== -1)
+				sp.write('ready');
 			if(data.indexOf('UID Value: ') === 0){
 				sp.write('busy');
 				var id = data.substring(12);
@@ -49,8 +50,9 @@ serialport.list(function(err, ports){
 						}else{
 							console.log('Added ', user);
 						}
-						sp.write('ready');
-
+						setTimeout(function(){
+							sp.write('ready');
+						},500);
 					});
 					addingUser = false;
 				}else{
@@ -71,7 +73,9 @@ serialport.list(function(err, ports){
 								}
 							});
 						}
-						sp.write('ready');
+						setTimeout(function(){
+							sp.write('ready');
+						},500);
 					});
 				}
 			}
