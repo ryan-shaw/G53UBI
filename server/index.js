@@ -24,7 +24,9 @@ serialport.list(function(err, ports){
 
 	sp.on('open', function(){
 		console.log('Serial port to Arduino opened');
-		
+		process.on('exit', function(){
+			sp.write('busy');
+		});
 		sp.on('data', function(data){
 			if(data.indexOf('Hello!') !== -1)
 				sp.write('ready');
