@@ -29,12 +29,12 @@ serialport.list(function(err, ports){
 			sp.flush();
 		});
 		sp.on('data', function(data){
-			dataProcess(data);
+			module.exports.dataProcess(data);
 		});
 	});
 });
 
-function dataProcess(data){
+module.exports = function dataProcess(data){
 	if(data.indexOf('Hello!') !== -1)
 		sp.write('ready');
 	if(data.indexOf('UID Value: ') === 0){
