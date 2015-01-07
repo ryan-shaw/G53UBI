@@ -29,12 +29,12 @@ serialport.list(function(err, ports){
 			sp.flush();
 		});
 		sp.on('data', function(data){
-			module.exports.dataProcess(data);
+			module.exports.dataProcess(data, sp);
 		});
 	});
 });
 
-module.exports = function dataProcess(data){
+module.exports.dataProcess = function (data, sp, cb){
 	if(data.indexOf('Hello!') !== -1)
 		sp.write('ready');
 	if(data.indexOf('UID Value: ') === 0){
@@ -48,6 +48,7 @@ module.exports = function dataProcess(data){
 		}
 		var id = buf.readInt32LE(0);
 		if(addingUser){
+			sp.write('busy');
 			UserModel.create({
 				name: user,
 				nfcId: id,
@@ -60,6 +61,7 @@ module.exports = function dataProcess(data){
 				}
 				setTimeout(function(){
 					sp.write('ready');
+					if(cb) cb();
 				},500);
 			});
 			addingUser = false;
@@ -84,6 +86,7 @@ module.exports = function dataProcess(data){
 				}
 				setTimeout(function(){
 					sp.write('ready');
+					if(cb) cb();
 				},500);
 			});
 		}
