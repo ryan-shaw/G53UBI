@@ -29,64 +29,68 @@ serialport.list(function(err, ports){
 			sp.flush();
 		});
 		sp.on('data', function(data){
-			if(data.indexOf('Hello!') !== -1)
-				sp.write('ready');
-			if(data.indexOf('UID Value: ') === 0){
-				sp.write('busy');
-				var id = data.substring(12);
-				console.log(id);
-				var bytes = id.split(' ');
-				var buf = new Buffer(bytes.length);
-				for(var i = 0; i < bytes.length; i++){
-					var byte = bytes[i].substring(2);
-					buf.write(byte, i);
-				}
-				var id = buf.readInt32LE(0);
-				if(addingUser){
-					UserModel.create({
-						name: user,
-						nfcId: id,
-						status: 1
-					}, function(err){
-						if(err){
-							console.log('Error adding user...', err);
-						}else{
-							console.log('Added ', user);
-						}
-						setTimeout(function(){
-							sp.write('ready');
-						},500);
-					});
-					addingUser = false;
-				}else{
-					UserModel.findOne({nfcId: id}, function(err, user){
-						if(!user){
-							console.log('Could not find user');
-						}else{
-							if(user.status === 1){
-								user.status = 0;
-							}else{
-								user.status = 1;
-							}
-							user.save(function(err){
-								if(err){
-									console.log('Could not update user', err);
-								}else{
-									console.log('User \''+user.name+'\' status is now: ', user.status);
-								}
-							});
-						}
-						setTimeout(function(){
-							sp.write('ready');
-						},500);
-					});
-				}
-			}
-			
-			console.log('data received: ', data.toString());
+			dataProcess(data);
 		});
 	});
 });
+
+function dataProcess(data){
+	if(data.indexOf('Hello!') !== -1)
+		sp.write('ready');
+	if(data.indexOf('UID Value: ') === 0){
+		sp.write('busy');
+		var id = data.substring(12);
+		console.log(id);
+		var bytes = id.split(' ');
+		var buf = new Buffer(bytes.length);
+		for(var i = 0; i < bytes.length; i++){
+			var byte = bytes[i].substring(2);
+			buf.write(byte, i);
+		}
+		var id = buf.readInt32LE(0);
+		if(addingUser){
+			UserModel.create({
+				name: user,
+				nfcId: id,
+				status: 1
+			}, function(err){
+				if(err){
+					console.log('Error adding user...', err);
+				}else{
+					console.log('Added ', user);
+				}
+				setTimeout(function(){
+					sp.write('ready');
+				},500);
+			});
+			addingUser = false;
+		}else{
+			UserModel.findOne({nfcId: id}, function(err, user){
+				if(!user){
+					console.log('Could not find user');
+				}else{
+					if(user.status === 1){
+						user.status = 0;
+					}else{
+						user.status = 1;
+					}
+					user.save(function(err){
+						if(err){
+							console.log('Could not update user', err);
+						}else{
+							console.log('User \''+user.name+'\' status is now: ', user.status);
+						}
+					});
+				}
+				setTimeout(function(){
+					sp.write('ready');
+				},500);
+			});
+		}
+	}
+	
+	console.log('data received: ', data.toString());
+}
 
 var sys = require('sys');
 var addingUser = false;
