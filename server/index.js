@@ -38,7 +38,6 @@ function dataProcess(data){
 	if(data.indexOf('Hello!') !== -1)
 		sp.write('ready');
 	if(data.indexOf('UID Value: ') === 0){
-		sp.write('busy');
 		var id = data.substring(12);
 		console.log(id);
 		var bytes = id.split(' ');
@@ -69,6 +68,7 @@ function dataProcess(data){
 				if(!user){
 					console.log('Could not find user');
 				}else{
+					sp.write('busy');
 					if(user.status === 1){
 						user.status = 0;
 					}else{
